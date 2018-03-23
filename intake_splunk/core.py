@@ -9,6 +9,7 @@ import warnings
 # would raise a warning
 warnings.filterwarnings('ignore', module='urllib3.connectionpool')
 
+
 class SplunkConnect:
 
     """
