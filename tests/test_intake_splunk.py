@@ -30,4 +30,4 @@ def test_basic(engine):
     test_query = 'index=_internal'
     c = SplunkSource(test_query, engine, ('admin', 'changeme'), 100)
     d = c.to_dask()
-    assert d.compute()
+    assert len(d.compute())
