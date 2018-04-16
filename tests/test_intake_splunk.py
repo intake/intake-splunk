@@ -3,7 +3,7 @@ import os
 import pytest
 import pandas as pd
 
-from intake_splunk import SplunkSource
+from intake_splunk.core import SplunkSource
 from .util import start_splunk, stop_docker
 
 CONNECT = {'host': 'localhost', 'port': 9200}
