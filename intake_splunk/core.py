@@ -5,9 +5,59 @@ import requests
 import pandas as pd
 import time
 import warnings
+from intake.source import base
+
 # because Splunk connections are against a self-signed cert, all connections
 # would raise a warning
 warnings.filterwarnings('ignore', module='urllib3.connectionpool')
+
+
+class SplunkSource(base.DataSource):
+    """Execute a query on Splunk
+
+    Parameters
+    ----------
+    query : str
+        String to pass to Splunk for execution. If it does not start with "|"
+        or "search", "search" will be prepended.
+    url : str
+        Endpoint on which to reach splunk, including protocol and port.
+    auth : (str, str) or str
+        Username/password to authenticate by.
+    chunksize : int
+
+    """
+    container = 'python'
+
+    def __init__(self, query, url, auth, chunksize=5000,
+                 metadata=None):
+        self.splunk = SplunkConnect(url)
+        if isinstance(auth, (tuple, list)):
+            self.splunk.auth(*auth)
+        else:
+            self.splunk.auth_head(key=auth)
+        self.query = query
+        self.chunksize = chunksize
+        self._df = None
+        super(SplunkSource, self).__init__(container=self.container,
+                                           metadata=metadata)
+
+    def _get_schema(self):
+        if self._df is None:
+            self._df = self.splunk.read_dask(self.query, self.chunksize)
+        self.npartitions = self._df.npartitions
+        return base.Schema(datashape=None,
+                           dtype=self._df,
+                           shape=(None, len(self._df.columns)),
+                           npartitions=self.npartitions,
+                           extra_metadata={})
+
+    def _get_partition(self, i):
+        return self._df.get_partition(i).compute()
+
+    def to_dask(self):
+        self.discover()
+        return self._df
 
 
 class SplunkConnect:
