@@ -1,12 +1,12 @@
 package:
-   name: intake-splunk
-   version: {{ GIT_DESCRIBE_TAG }}
+  name: intake-splunk
+  version: {{ GIT_DESCRIBE_TAG }}
 
 source:
-   path: ..
+  path: ..
 
 build:
-  number: {{ GIT_DESCRIBE_NUMBER }}
+  number: {{ GIT_DESCRIBE_NUMBER|int }}
   script: python setup.py install --single-version-externally-managed --record=record.txt
   noarch: python
 
