@@ -1,13 +1,12 @@
 API Reference
 =============
 
-.. currentmodule:: intake_splunk
 .. autosummary::
-   Plugin
-   SplunkSource
+   intake_splunk.Plugin
+   intake_splunk.core.SplunkSource
 
-.. autoclass:: Plugin
+.. autoclass:: intake_splunk.Plugin
    :members:
 
-.. autoclass:: SplunkSource
+.. autoclass:: intake_splunk.core.SplunkSource
    :members:
