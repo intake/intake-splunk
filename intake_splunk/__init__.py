@@ -24,9 +24,6 @@ class Plugin(base.Plugin):
         """
         from intake_splunk.core import SplunkSource
         base_kwargs, source_kwargs = self.separate_base_kwargs(kwargs)
-        query = source_kwargs.pop('query', "")
-        url = source_kwargs.pop('url', "")
-        auth = source_kwargs.pop('auth', tuple())
         return SplunkSource(query, url, auth,
                             metadata=base_kwargs['metadata'],
                             **source_kwargs)

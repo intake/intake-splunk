@@ -1,15 +1,8 @@
-import os
-
 import pytest
-import pandas as pd
 
+import intake
 from intake_splunk.core import SplunkSource
 from .util import start_splunk, stop_docker
-
-CONNECT = {'host': 'localhost', 'port': 9200}
-TEST_DATA_DIR = os.path.dirname(__file__)
-TEST_DATA = 'sample1.csv'
-df = pd.read_csv(os.path.join(TEST_DATA_DIR, TEST_DATA))
 
 
 @pytest.fixture(scope='module')
@@ -29,5 +22,13 @@ def test_basic(engine):
     # should always return something
     test_query = 'index=_internal'
     c = SplunkSource(test_query, engine, ('admin', 'changeme'), 100)
+    d = c.to_dask()
+    assert len(d.compute())
+
+
+def test_open(engine):
+    # should always return something
+    test_query = 'index=_internal'
+    c = intake.open_splunk(test_query, engine, ('admin', 'changeme'), 100)
     d = c.to_dask()
     assert len(d.compute())
