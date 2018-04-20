@@ -27,7 +27,7 @@ class SplunkSource(base.DataSource):
     chunksize : int
 
     """
-    container = 'python'
+    container = 'dataframe'
 
     def __init__(self, query, url, auth, chunksize=5000,
                  metadata=None):
