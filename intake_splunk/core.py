@@ -44,6 +44,8 @@ class SplunkSource(base.DataSource):
 
     def _get_schema(self):
         if self._df is None:
+            # this waits until query is ready, but Splunk has results_preview
+            # end-point which can be fetched while query is running
             self._df = self.splunk.read_dask(self.query, self.chunksize)
         self.npartitions = self._df.npartitions
         return base.Schema(datashape=None,
@@ -137,6 +139,8 @@ class SplunkConnect:
         Initiate a query as a job
         """
         q = self._sanitize_query(q)
+        # opportunity to pass extra args here, especially job timeout
+        # http://docs.splunk.com/Documentation/Splunk/6.2.6/RESTREF/RESTsearch#POST_search.2Fjobs_method_detail
         r = requests.post(self.url + '/services/search/jobs?output_mode=json',
                           verify=False, data={'search': q},
                           headers=self.head)
@@ -149,9 +153,11 @@ class SplunkConnect:
         path = '/services/search/jobs/{}?output_mode=json'.format(sid)
         r = requests.get(self.url + path, verify=False, headers=self.head)
         out = r.json()['entry'][0]['content']
+        # why not pass all job details?
         return out['isDone'], out.get('resultCount', 0)
 
     def wait_poll(self, sid):
+        # instead of polling, job could be started in exec_mode="blocking"
         time0 = time.time()
         while True:
             done, count = self.poll_query(sid)
@@ -166,6 +172,7 @@ class SplunkConnect:
         """
         Fetch query output (as CSV)
         """
+        # could potentially be streaming download
         path = ('/services/search/jobs/{}/results/?output_mode=csv'
                 '&offset={}&count={}').format(sid, offset, count)
         r = requests.get(self.url + path,  verify=False, headers=self.head)
@@ -185,6 +192,8 @@ class SplunkConnect:
             Number of rows to fetch
         kwargs: passed to pd.read_csv
         """
+        # Since we know the count, could pre-allocate df and set values in
+        # chunks while streaming the download
         txt = self.get_query_result(sid, offset, count)
         return pd.read_csv(io.BytesIO(txt), **kwargs)
 
