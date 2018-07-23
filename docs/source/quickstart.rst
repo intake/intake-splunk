@@ -38,13 +38,7 @@ Three parameters are of interest when defining a data source:
 Creating Catalog Entries
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-To include in a catalog, the plugin must be listed in the plugins of the catalog::
-
-   plugins:
-     source:
-       - module: intake_splunk
-
-and entries must specify ``driver: splunk``.
+To use, catalog entries must specify ``driver: splunk``.
 
 
 

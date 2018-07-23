@@ -9,6 +9,7 @@ from intake.source import base
 
 # because Splunk connections are against a self-signed cert, all connections
 # would raise a warning
+from . import __version__
 warnings.filterwarnings('ignore', module='urllib3.connectionpool')
 
 
@@ -28,24 +29,28 @@ class SplunkSource(base.DataSource):
 
     """
     container = 'dataframe'
+    version = __version__
+    name = 'splunk'
+    partition_access = True
 
     def __init__(self, query, url, auth, chunksize=5000,
                  metadata=None):
-        self.splunk = SplunkConnect(url)
-        if isinstance(auth, (tuple, list)):
-            self.splunk.auth(*auth)
-        else:
-            self.splunk.auth_head(key=auth)
+        self.url = url
+        self.auth = auth
         self.query = query
         self.chunksize = chunksize
         self._df = None
-        super(SplunkSource, self).__init__(container=self.container,
-                                           metadata=metadata)
+        super(SplunkSource, self).__init__(metadata=metadata)
 
     def _get_schema(self):
         if self._df is None:
             # this waits until query is ready, but Splunk has results_preview
             # end-point which can be fetched while query is running
+            self.splunk = SplunkConnect(self.url)
+            if isinstance(self.auth, (tuple, list)):
+                self.splunk.auth(*self.auth)
+            else:
+                self.splunk.auth_head(key=self.auth)
             self._df = self.splunk.read_dask(self.query, self.chunksize)
         self.npartitions = self._df.npartitions
         return base.Schema(datashape=None,
