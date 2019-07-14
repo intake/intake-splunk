@@ -3,3 +3,4 @@ __version__ = get_versions()['version']
 del get_versions
 
 from .core import SplunkSource
+from .core import SplunkConnect
