@@ -16,6 +16,8 @@ setup(
     license='BSD',
     py_modules=['intake_splunk'],
     packages=find_packages(),
+    entry_points={
+        'intake.drivers': ['splunk = intake_splunk.core:SplunkSource']},
     package_data={'': ['*.csv', '*.yml', '*.html']},
     include_package_data=True,
     install_requires=requires,
