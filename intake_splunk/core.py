@@ -42,6 +42,7 @@ class SplunkSource(base.DataSource):
         self._df = None
         super(SplunkSource, self).__init__(metadata=metadata)
 
+
     def _get_schema(self):
         if self._df is None:
             # this waits until query is ready, but Splunk has results_preview
@@ -96,11 +97,18 @@ class SplunkConnect:
         if key:
             self.auth_head(key)
 
+        self.namespace="/services/"
+
+    def set_namespace(self,user,app):
+        self.namespace=f"/servicesNS/{user}/{app}/"
+
+
+
     def auth(self, user, pw):
         """
         Login to splunk and get a session key
         """
-        url = self.url + '/services/auth/login?output_mode=json'
+        url = self.url + self.namespace + 'auth/login?output_mode=json'
         r = requests.post(url, verify=False, data={'username': user,
                                                    'password': pw})
         self.key = r.json()['sessionKey']
@@ -134,7 +142,7 @@ class SplunkConnect:
         Get saved search names/definitions as a dict
         """
         r = requests.get(
-            self.url + '/services/saved/searches?output_mode=json',
+            self.url + self.namespace + 'saved/searches?output_mode=json',
             headers=self.head, verify=False)
         out = r.json()['entry']
         return {o['name']: o['content']['search'] for o in out}
@@ -146,7 +154,7 @@ class SplunkConnect:
         q = self._sanitize_query(q)
         # opportunity to pass extra args here, especially job timeout
         # http://docs.splunk.com/Documentation/Splunk/6.2.6/RESTREF/RESTsearch#POST_search.2Fjobs_method_detail
-        r = requests.post(self.url + '/services/search/jobs?output_mode=json',
+        r = requests.post(self.url + self.namespace + 'search/jobs?output_mode=json',
                           verify=False, data={'search': q},
                           headers=self.head)
         return r.json()['sid']
@@ -155,7 +163,7 @@ class SplunkConnect:
         """
         Check the status of a job
         """
-        path = '/services/search/jobs/{}?output_mode=json'.format(sid)
+        path = self.namespace + 'search/jobs/{}?output_mode=json'.format(sid)
         r = requests.get(self.url + path, verify=False, headers=self.head)
         out = r.json()['entry'][0]['content']
         # why not pass all job details?
@@ -178,7 +186,7 @@ class SplunkConnect:
         Fetch query output (as CSV)
         """
         # could potentially be streaming download
-        path = ('/services/search/jobs/{}/results/?output_mode=csv'
+        path = (self.namespace + 'search/jobs/{}/results/?output_mode=csv'
                 '&offset={}&count={}').format(sid, offset, count)
         r = requests.get(self.url + path,  verify=False, headers=self.head)
         return r.content
